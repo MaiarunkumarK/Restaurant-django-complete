@@ -1,0 +1,26 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Order Update</title>
+    <link rel="stylesheet" href="{% static 'shop/styles.css' %}">
+</head>
+<body>
+    <h1>Edit Order Update</h1>
+    <form method="POST">
+        {% csrf_token %}
+        <label for="order_id">Order ID:</label>
+        <input type="text" id="order_id" name="order_id" value="{{ order_update.order_id }}" readonly><br>
+
+        <label for="update_desc">Update Description:</label>
+        <textarea id="update_desc" name="update_desc">{{ order_update.update_desc }}</textarea><br>
+
+        <label for="timestamp">Timestamp:</label>
+        <input type="datetime-local" id="timestamp" name="timestamp" value="{{ order_update.timestamp|date:'Y-m-d\TH:i' }}"><br>
+
+        <button type="submit">Save</button>
+    </form>
+    <a href="{% url 'admin_order_updates' %}">Cancel</a>
+</body>
+</html>

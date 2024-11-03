@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Product List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+    
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+    
+        button {
+            padding: 10px 15px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            background-color: #28a745;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+    
+        button:hover {
+            background-color: #218838;
+        }
+    
+        #add-product-form, #update-product-form {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: none; /* Initially hidden */
+            margin-bottom: 20px;
+        }
+    
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+    
+        input[type="text"],
+        input[type="number"],
+        input[type="date"],
+        textarea,
+        input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+    
+        textarea {
+            resize: vertical; /* Allow vertical resizing only */
+        }
+    
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+    
+        th, td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+    
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+    
+        tr:nth-child(even) {
+            background-color: #f9f9f9; /* Alternate row color */
+        }
+    
+        tr:hover {
+            background-color: #f1f1f1; /* Highlight row on hover */
+        }
+    
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            table {
+                font-size: 14px; /* Adjust font size for smaller screens */
+            }
+    
+            button {
+                width: 100%; /* Full width buttons on smaller screens */
+            }
+        }
+    </style>
+    
+    <script>
+        let currentProductId = null; // Store the ID of the product to update
+
+        function toggleForm() {
+            const form = document.getElementById('add-product-form');
+            form.style.display = form.style.display === 'none' || form.style.display === '' ? 'block' : 'none';
+        }
+
+        function toggleUpdateForm() {
+            const form = document.getElementById('update-product-form');
+            form.style.display = form.style.display === 'none' || form.style.display === '' ? 'block' : 'none';
+        }
+
+        async function addProduct(event) {
+            event.preventDefault(); // Prevent the form from submitting the default way
+            const formData = new FormData(event.target);
+
+            try {
+                const response = await fetch("{% url 'add_product' %}", {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}' // CSRF token for protection
+                    }
+                });
+
+                const data = await response.json();
+                if (data.status === 'success') {
+                    addProductToTable(data.product);
+                    toggleForm(); // Hide the form after successful submission
+                } else {
+                    alert("Failed to add product: " + data.error);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert("An error occurred. Please try again.");
+            }
+        }
+
+        function addProductToTable(product) {
+            const table = document.getElementById('product-table').getElementsByTagName('tbody')[0];
+            const newRow = table.insertRow();
+
+            const cellName = newRow.insertCell(0);
+            const cellCategory = newRow.insertCell(1);
+            const cellPrice = newRow.insertCell(2);
+            const cellActions = newRow.insertCell(3); // For actions
+
+            cellName.textContent = product.product_name;
+            cellCategory.textContent = product.category;
+            cellPrice.textContent = product.price;
+
+            // Create edit button
+            const editButton = document.createElement('button');
+            editButton.textContent = 'Edit';
+            editButton.onclick = () => openUpdateForm(product); // Open update form with product data
+            cellActions.appendChild(editButton);
+        }
+
+        function openUpdateForm(product) {
+            console.log('Product ID:', product.product_id); // Check the product ID
+            document.getElementById('product_id').value = product.product_id; // This should be a numeric ID
+            
+            // Populate the rest of the form fields
+            document.getElementById('product_name_update').value = product.product_name;
+            document.getElementById('category_update').value = product.category;
+            document.getElementById('subcategory_update').value = product.subcategory || '';
+            document.getElementById('price_update').value = product.price;
+            document.getElementById('description_update').value = product.desc || '';
+            document.getElementById('pub_date_update').value = product.pub_date;
+            document.getElementById('average_rating_update').value = product.average_rating || 0;
+            document.getElementById('total_ratings_update').value = product.total_ratings || 0;
+        
+            toggleUpdateForm(); // Show the update form
+        }
+
+        function updateProduct(event) {
+            event.preventDefault(); // Prevent default form submission
+        
+            const form = event.target; // Get the form that triggered the event
+            const formData = new FormData(form); // Create FormData object from the form
+        
+            // Log FormData entries
+            console.log('FormData entries:');
+            for (const [key, value] of formData.entries()) {
+                console.log(`${key}: ${value}`);
+            }
+        
+            // Check product_id specifically
+            console.log('Product ID:', formData.get('product_id'));
+        
+            fetch('/shop/update-product/', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': form.querySelector('[name="csrfmiddlewaretoken"]').value // Include CSRF token
+                }
+            })
+            .then(response => {
+                console.log('Response:', response); // Log the response
+                // No need to process JSON data, just check if the response is ok
+                if (response.ok) {
+                    alert("Order update saved successfully."); // Display success message in prompt
+                    window.location.href = '/shop/admin_product_list/'; // Redirect to the admin product list page
+                } else {
+                    alert('An error occurred while updating the product.'); // Notify user of error
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while updating the product.');
+            });
+        }
+        
+        
+        
+        
+        
+        // Function to get CSRF token from cookies (if not already implemented)
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    // Check if this cookie string begins with the desired name
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        
+        
+
+        function previewUpdateImage(event) {
+            const imageUpdatePreview = document.getElementById('image-update-preview');
+            const file = event.target.files[0];
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    imageUpdatePreview.src = e.target.result;
+                    imageUpdatePreview.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Product List</h1>
+
+    <!-- Button to add product -->
+    <button onclick="toggleForm()">Add Product</button>
+
+    <!-- Add Product Form -->
+    <div id="add-product-form">
+        <form method="POST" enctype="multipart/form-data" onsubmit="addProduct(event)">
+            {% csrf_token %}
+            <label for="product_name">Product Name:</label>
+            <input type="text" id="product_name" name="product_name" required>
+
+            <label for="category">Category:</label>
+            <input type="text" id="category" name="category" required>
+
+            <label for="subcategory">Subcategory:</label>
+            <input type="text" id="subcategory" name="subcategory">
+
+            <label for="price">Price:</label>
+            <input type="number" id="price" name="price" step="0.01" min="0" value="0" required>
+
+            <label for="description">Description:</label>
+            <textarea id="description" name="description" rows="4" required></textarea>
+
+            <label for="pub_date">Publication Date:</label>
+            <input type="date" id="pub_date" name="pub_date" required>
+
+            <label for="image">Image:</label>
+            <input type="file" id="image" name="image" accept="image/*">
+
+            <label for="average_rating">Average Rating:</label>
+            <input type="number" id="average_rating" name="average_rating" step="0.1" min="0" max="5" value="0.0">
+
+            <label for="total_ratings">Total Ratings:</label>
+            <input type="number" id="total_ratings" name="total_ratings" min="0" value="0">
+
+            <button type="submit">Add Product</button>
+        </form>
+    </div>
+
+    <!-- Update Product Form -->
+    <div id="update-product-form">
+        <form action="{% url 'update_product' %}" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" id="product_id" name="product_id" value="{{ product.id }}">
+            <p>Product ID: {{ product.id }}</p>  <!-- Add this line for debugging -->
+           
+            <label for="product_name_update">Product Name:</label>
+            <input type="text" id="product_name_update" name="product_name" required>
+    
+            <label for="category_update">Category:</label>
+            <input type="text" id="category_update" name="category" required>
+    
+            <label for="subcategory_update">Subcategory:</label>
+            <input type="text" id="subcategory_update" name="subcategory">
+    
+            <label for="price_update">Price:</label>
+            <input type="number" id="price_update" name="price" step="0.01" min="0" value="0" required>
+    
+            <label for="description_update">Description:</label>
+            <textarea id="description_update" name="description" rows="4" required></textarea>
+    
+            <label for="pub_date_update">Publication Date:</label>
+            <input type="date" id="pub_date_update" name="pub_date" required>
+    
+            <label for="average_rating_update">Average Rating:</label>
+            <input type="number" id="average_rating_update" name="average_rating" step="0.1" min="0" max="5" value="0.0">
+    
+            <label for="total_ratings_update">Total Ratings:</label>
+            <input type="number" id="total_ratings_update" name="total_ratings" min="0" value="0">
+    
+            <label for="image_update">Image:</label>
+            <input type="file" id="image_update" name="image" accept="image/*" onchange="previewUpdateImage(event)">
+            <img id="image-update-preview" src="" alt="Image Preview" style="display:none; max-width: 200px; margin-top: 10px;">
+    
+            <button type="submit">Update Product</button>
+        </form>
+
+    </div>
+    
+    
+
+    <!-- Product Table -->
+    <table id="product-table">
+        <thead>
+            <tr>
+                <th>Product Name</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for product in products %}
+            <tr>
+                <td>{{ product.product_name }}</td>
+                <td>{{ product.category }}</td>
+                <td>{{ product.price }}</td>
+                <td>
+                    <button onclick="openUpdateForm({ 
+                        product_id: '{{ product.product_id }}',
+                        product_name: '{{ product.product_name }}',
+                        category: '{{ product.category }}',
+                        subcategory: '{{ product.subcategory|default:'' }}',
+                        price: '{{ product.price }}',
+                        desc: '{{ product.desc|default:'' }}',
+                        pub_date: '{{ product.pub_date }}',
+                        image: '{{ product.image|default:'' }}',
+                        average_rating: '{{ product.average_rating|default:0 }}',
+                        total_ratings: '{{ product.total_ratings|default:0 }}'
+                    })">Edit</button>
+                </td>
+                
+            </tr>
+            {% endfor %}
+            <!-- Product rows will be inserted here -->
+        </tbody>
+    </table>
+</body>
+</html>

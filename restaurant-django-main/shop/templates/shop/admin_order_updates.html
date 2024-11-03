@@ -1,0 +1,172 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Order Updates</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background-color: #fff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #007bff; /* Blue color for header */
+            color: white;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1; /* Light grey on hover */
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9; /* Light grey for even rows */
+        }
+
+        tr:nth-child(odd) {
+            background-color: #ffffff; /* White for odd rows */
+        }
+
+        /* Responsive design */
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            h1 {
+                font-size: 1.5rem;
+            }
+            table {
+                font-size: 0.9rem;
+            }
+            th, td {
+                padding: 10px 8px;
+            }
+        }
+
+        /* Modal styles for the update form */
+        #update-order-form {
+            display: none; /* Initially hidden */
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #fff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            z-index: 1000; /* Ensure it appears above other elements */
+        }
+    </style>
+</head>
+<body>
+    <h1>Order Updates</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Update ID</th>
+                <th>Order ID</th>
+                <th>Description</th>
+                <th>Timestamp</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for update in order_updates %}
+                <tr>
+                    <td>{{ update.update_id }}</td>
+                    <td>{{ update.order_id }}</td>
+                    <td>{{ update.update_desc }}</td>
+                    <td>{{ update.timestamp }}</td>
+                    <td>
+                        <button onclick="openUpdateForm({{ update.update_id }}, '{{ update.update_desc|escapejs }}')">Update</button>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="5">No order updates available.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Update Form (initially hidden) -->
+    <div id="update-order-form">
+        <h2>Update Order Update</h2>
+        <form method="POST" id="update-form" onsubmit="submitUpdate(event)">
+            {% csrf_token %}
+            <input type="hidden" id="update_id" name="update_id">
+            <label for="update_desc">Description:</label>
+            <textarea id="update_desc" name="update_desc" required></textarea>
+            <button type="submit">Submit Update</button>
+            <button type="button" onclick="closeUpdateForm()">Cancel</button>
+        </form>
+    </div>
+
+    <script>
+        function openUpdateForm(updateId, updateDesc) {
+            document.getElementById('update_id').value = updateId; // Set the update ID
+            document.getElementById('update_desc').value = updateDesc; // Set the update description
+            document.getElementById('update-order-form').style.display = 'block'; // Show the form
+        }
+        
+        function openUpdateForm(updateId) {
+            window.location.href = `/shop/update_order/?update_id=${updateId}`;
+        }
+        
+        
+        function closeUpdateForm() {
+            document.getElementById('update-order-form').style.display = 'none'; // Hide the form
+        }
+
+        function submitUpdate(event) {
+            event.preventDefault(); // Prevent default form submission
+
+            const form = event.target; // Get the form that triggered the event
+            const formData = new FormData(form); // Create FormData object from the form
+
+            fetch('/shop/update-order/', { // Update this URL as needed
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': form.querySelector('[name="csrfmiddlewaretoken"]').value // Include CSRF token
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert(data.message); // Notify user of success
+                    location.reload(); // Reload the page to see updates
+                } else {
+                    alert(data.message); // Notify user of error
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while updating the order update. Check console for details.');
+            });
+        }
+    </script>
+</body>
+</html>

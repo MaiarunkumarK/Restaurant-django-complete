@@ -1,0 +1,142 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User List</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background-color: #fff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #007bff; /* Blue color for header */
+            color: white;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1; /* Light grey on hover */
+        }
+
+        /* Modal styles */
+        #modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+            padding-top: 60px;
+        }
+
+        #modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* Responsive design */
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            h1 {
+                font-size: 1.5rem;
+            }
+            table {
+                font-size: 0.9rem;
+            }
+            th, td {
+                padding: 10px 8px;
+            }
+        }
+    </style>
+    <script>
+        function viewUserDetails(user) {
+            // Show user details in modal
+            const userDetails = `
+                <li>Full Name: ${user.first_name} ${user.last_name}</li>
+                <li>Email: ${user.email}</li>
+                <li>Active: ${user.active ? 'Yes' : 'No'}</li>
+            `;
+            const itemsList = document.getElementById('items-list');
+            itemsList.innerHTML = userDetails; // Set the user details
+
+            document.getElementById('order-modal').style.display = 'block';
+        }
+    </script>
+</head>
+<body>
+    <h1>User List</h1>
+    <table>
+        <tr>
+            <th>Username</th> <!-- Added Username column -->
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Email</th>
+            <th>Active</th>
+        </tr>
+        {% for user in users %}
+        <tr>
+            <td>{{ user.username }}</td> <!-- Display username -->
+            <td>{{ user.first_name }}</td>
+            <td>{{ user.last_name }}</td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.active }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="5">No users available.</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <div id="order-modal" style="display:none;">
+        <h2>User Details</h2>
+        <ul id="items-list"></ul>
+        <button onclick="document.getElementById('order-modal').style.display='none'">Close</button>
+    </div>
+</body>
+</html>

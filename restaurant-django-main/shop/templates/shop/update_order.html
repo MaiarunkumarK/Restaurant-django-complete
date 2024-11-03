@@ -1,0 +1,104 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Update Order</title>
+    <style>
+        /* General page styling */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+
+        h2 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        /* Form styling */
+        form {
+            max-width: 570px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin: auto;
+        }
+
+        label {
+            font-size: 16px;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+        }
+
+        .readonly-field {
+            background-color: #f1f1f1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            margin-bottom: 20px;
+            color: #666;
+        }
+
+        textarea {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            resize: vertical;
+            margin-bottom: 20px;
+        }
+
+        button {
+            display: inline-block;
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h2>Update Order</h2>
+    <form method="POST">
+        {% csrf_token %}
+        <!-- Display Update ID -->
+        <label for="update_id">Update ID:</label>
+        <div id="update_id" class="readonly-field">{{ order_update.update_id }}</div>
+        
+        <!-- Display Order ID -->
+        <label for="order_id">Order ID:</label>
+        <div id="order_id" class="readonly-field">{{ order_update.order_id }}</div>
+        
+        <!-- Editable Description Field -->
+        <label for="update_desc">Description:</label>
+        <textarea id="update_desc" name="update_desc" required>{{ order_update.update_desc }}</textarea>
+        
+        <!-- Display Timestamp -->
+        <label for="timestamp">Timestamp:</label>
+        <div id="timestamp" class="readonly-field">{{ order_update.timestamp }}</div>
+        
+        <!-- Submit Button -->
+        <button type="submit">Submit Update</button>
+    </form>
+</body>
+</html>
